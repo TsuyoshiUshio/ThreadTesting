@@ -18,9 +18,19 @@ namespace ThreadTesting
                 cts.Cancel();
             };
 
+            Console.WriteLine($"MainThread {Thread.CurrentThread.ManagedThreadId}");
+
+            SomeSetupAsync().GetAwaiter().GetResult(); // create a new thread so that it is different behavior, however, original purpose is getting error before loop.
+
             Task.Run(() => HelloLoopAsync(cts.Token));
             Task.Run(() => HelloLoopAsync(cts.Token));
             Console.ReadLine();
+        }
+
+        private async Task SomeSetupAsync()
+        {
+            await Task.Delay(10);
+            Console.WriteLine($"Runs setup on {Thread.CurrentThread.ManagedThreadId}");
         }
 
         private async Task HelloLoopAsync(CancellationToken cancellationToken)
@@ -29,6 +39,7 @@ namespace ThreadTesting
             while(!cancellationToken.IsCancellationRequested)
             {
                 await Task.Delay(1000 * 3);
+                await SomeSetupAsync();
                 Console.WriteLine($"Thread {Thread.CurrentThread.ManagedThreadId}: count : {count}");
                 count++;
             }
